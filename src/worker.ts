@@ -9,7 +9,7 @@ const MAX_RETRIES = 3;
 export default async (data: Data) => {
   let retries = 0;
 
-  logWithTimestamp(`[${data.id}]: Start probing ${data.urls.join(",")}`);
+  // logWithTimestamp(`[${data.id}]: Start probing ${data.urls.join(",")}`);
 
   while (retries < MAX_RETRIES) {
     try {
@@ -18,6 +18,7 @@ export default async (data: Data) => {
         const start = Date.now();
         const response = await ky(url, {
           throwHttpErrors: false,
+          timeout: 10 * 1000,
           hooks: {
             beforeRetry: [
               async ({ retryCount, error }) => {
@@ -53,12 +54,23 @@ export default async (data: Data) => {
             size += value.length;
           }
         }
-        result.push({ duration: end - start, size });
+
+        if (
+          assertResponse({
+            status: response.status,
+            size,
+            duration: end - start,
+          })
+        ) {
+          result.push({ duration: end - start, size, status: response.status });
+        } else {
+          throw new Error(`ASSERTION_FAILED`);
+        }
       }
 
       logWithTimestamp(
-        `[${data.id}]: Finish probing with result: ${result
-          .map((r) => `${r.duration}ms,${r.size}bytes`)
+        `[${data.id}]: ${result
+          .map((r) => `${r.duration}ms,${r.size}bytes,${r.status}`)
           .join(`,`)}`
       );
 
@@ -69,15 +81,21 @@ export default async (data: Data) => {
 
       if (error.name === "TimeoutError") {
         logWithTimestamp(
-          `[${data.id}]: Request timeout. Will try again in ${
+          `[${data.id}]: Request timeout (Attempt #${retries}). Retry in ${
             backoffTime / 1000
           } seconds`
+        );
+      } else if (error.message === "ASSERTION_FAILED") {
+        logWithTimestamp(
+          `[${data.id}]: ASSERTION_FAILED (Attempt #${retries}). Retry in ${
+            backoffTime / 1000
+          } seconds.`
         );
       } else {
         logWithTimestamp(
           `[${data.id}]: Request error: ${JSON.stringify(
             error
-          )}. Will try again in ${backoffTime / 1000} seconds.`
+          )} (Attempt #${retries}). Retry in ${backoffTime / 1000} seconds.`
         );
       }
 
@@ -85,9 +103,24 @@ export default async (data: Data) => {
     }
   }
 
-  logWithTimestamp(`[${data.id}]: Stop retrying.`);
+  const message = `[${data.id}]: Failed to probe ${data.urls.join(
+    ","
+  )} after ${MAX_RETRIES} retries. Send notification or something.`;
+  logWithTimestamp(message);
 
-  throw new Error(
-    `Failed to probe ${data.urls.join(",")} after ${MAX_RETRIES} retries`
-  );
+  throw new Error(message);
+};
+
+const assertResponse = ({
+  status,
+}: {
+  duration: number;
+  size: number;
+  status: number;
+}) => {
+  // do some other assertion here
+  if (status !== 200) {
+    return false;
+  }
+  return true;
 };

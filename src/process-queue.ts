@@ -49,14 +49,17 @@ export const processQueue = async () => {
       piscina
         .run(task.data)
         .then(() => {
+          // no need to do anything
+        })
+        .catch((err) => {
+          // no need to do anything
+        })
+        .finally(() => {
           const updatedTask = {
             ...task,
             nextRun: Date.now() + task.interval * 1000,
           };
           taskMap.set(id, updatedTask);
-        })
-        .catch((err) => {
-          console.error("Task failed", err);
         });
     }
   }
