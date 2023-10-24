@@ -2,9 +2,13 @@ import path from "path";
 import SQLite3 from "sqlite3";
 import { open, Database, ISqlite } from "sqlite";
 import { logWithTimestamp } from "./utils";
+import { fileURLToPath } from "url";
 
 const sqlite3 = SQLite3.verbose();
 const dbPath = path.resolve(process.cwd(), "monika-logs.db");
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 let db: Database<SQLite3.Database, SQLite3.Statement>;
 export const getSQLiteDB = async () => {
@@ -21,7 +25,11 @@ export const getSQLiteDB = async () => {
 
 export async function migrate() {
   const _db = await getSQLiteDB();
-  const migrationsPath = path.join(__dirname, "./migrations");
+  const migrationsPath = path.join(
+    __dirname,
+    process.env.NODE_ENV === "development" ? "../public" : "",
+    "./migrations"
+  );
   logWithTimestamp(`Migration starts: ${migrationsPath}`);
   await _db.migrate({
     migrationsPath,

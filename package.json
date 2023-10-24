@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "Something",
   "scripts": {
-    "prepare": "tsup --env.NODE_ENV production",
+    "prepare": "tsup --publicDir --env.NODE_ENV production",
     "dev": "NODE_ENV=development tsx watch --no-warnings src/index.ts",
     "build": "rm -rf binary dist && npm run prepare && caxa -i . -o binary/moni-mini -- \"{{caxa}}/node_modules/.bin/node\" \"{{caxa}}/dist/index.mjs\""
   },
