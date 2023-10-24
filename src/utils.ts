@@ -7,3 +7,16 @@ export function logWithTimestamp(message: string): void {
   });
   console.log(`[${timestamp}] ${message}`);
 }
+
+export function leftPad(
+  input: string,
+  length: number,
+  paddingChar: string = " "
+): string {
+  if (input.length >= length) {
+    return input;
+  }
+  const paddingLength = length - input.length;
+  const padding = paddingChar.repeat(paddingLength);
+  return padding + input;
+}

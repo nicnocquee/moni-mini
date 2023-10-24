@@ -1,5 +1,5 @@
 import ky from "ky";
-import { logWithTimestamp } from "@/utils";
+import { leftPad, logWithTimestamp } from "@/utils";
 import { Data } from "@/process-queue";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -9,6 +9,7 @@ const MAX_RETRIES = 3;
 export default async (data: Data) => {
   let retries = 0;
 
+  const paddedId = leftPad(data.id, 4, "0");
   // logWithTimestamp(`[${data.id}]: Start probing ${data.urls.join(",")}`);
 
   while (retries < MAX_RETRIES) {
@@ -23,9 +24,7 @@ export default async (data: Data) => {
             beforeRetry: [
               async ({ retryCount, error }) => {
                 logWithTimestamp(
-                  `[${
-                    data.id
-                  }]: Retry #${retryCount} ${url}. Error: ${JSON.stringify(
+                  `[${paddedId}]: Retry #${retryCount} ${url}. Error: ${JSON.stringify(
                     error
                   )}`
                 );
@@ -69,7 +68,7 @@ export default async (data: Data) => {
       }
 
       logWithTimestamp(
-        `[${data.id}]: ${result
+        `[${paddedId}]: ${result
           .map((r) => `${r.duration}ms,${r.size}bytes,${r.status}`)
           .join(`,`)}`
       );
@@ -81,19 +80,19 @@ export default async (data: Data) => {
 
       if (error.name === "TimeoutError") {
         logWithTimestamp(
-          `[${data.id}]: Request timeout (Attempt #${retries}). Retry in ${
+          `[${paddedId}]: Request timeout (Attempt #${retries}). Retry in ${
             backoffTime / 1000
           } seconds`
         );
       } else if (error.message === "ASSERTION_FAILED") {
         logWithTimestamp(
-          `[${data.id}]: ASSERTION_FAILED (Attempt #${retries}). Retry in ${
+          `[${paddedId}]: ASSERTION_FAILED (Attempt #${retries}). Retry in ${
             backoffTime / 1000
           } seconds.`
         );
       } else {
         logWithTimestamp(
-          `[${data.id}]: Request error: ${JSON.stringify(
+          `[${paddedId}]: Request error: ${JSON.stringify(
             error
           )} (Attempt #${retries}). Retry in ${backoffTime / 1000} seconds.`
         );
@@ -103,7 +102,7 @@ export default async (data: Data) => {
     }
   }
 
-  const message = `[${data.id}]: Failed to probe ${data.urls.join(
+  const message = `[${paddedId}]: Failed to probe ${data.urls.join(
     ","
   )} after ${MAX_RETRIES} retries. Send notification or something.`;
   logWithTimestamp(message);
