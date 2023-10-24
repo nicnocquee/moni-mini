@@ -63,7 +63,7 @@ export default async (data: Data) => {
         ) {
           result.push({ duration: end - start, size, status: response.status });
         } else {
-          throw new Error(`ASSERTION_FAILED`);
+          throw new Error(`ASSERTION_FAILED`); // throw so can be retried
         }
       }
 
