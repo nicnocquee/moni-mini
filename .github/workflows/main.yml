@@ -11,7 +11,7 @@ jobs:
           - os: macos
             build: |
               npx caxa -i . -o "moni-mini" -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/dist/index.mjs"
-              tar -czf "moni-mini--macos--${{ github.sha }}.app.tgz" "moni-mini"
+              tar -czf "moni-mini--macos--${{ github.sha }}.tgz" "moni-mini"
             artifact: moni-mini--macos--${{ github.sha }}.tgz
           - os: ubuntu
             build: |
