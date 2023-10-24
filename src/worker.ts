@@ -17,10 +17,17 @@ export default async (data: Data) => {
       for (const url of data.urls) {
         const start = Date.now();
         const response = await ky(url, {
+          throwHttpErrors: false,
           hooks: {
             beforeRetry: [
-              async ({ retryCount }) => {
-                logWithTimestamp(`[${data.id}]: Retry #${retryCount} ${url}`);
+              async ({ retryCount, error }) => {
+                logWithTimestamp(
+                  `[${
+                    data.id
+                  }]: Retry #${retryCount} ${url}. Error: ${JSON.stringify(
+                    error
+                  )}`
+                );
               },
             ],
           },
@@ -56,14 +63,23 @@ export default async (data: Data) => {
       );
 
       return result;
-    } catch (error) {
+    } catch (error: any) {
       retries++;
       const backoffTime = Math.pow(2, retries) * 1000; // Exponential backoff in milliseconds
-      logWithTimestamp(
-        `[${data.id}]: Request retries failed. Will try again in ${
-          backoffTime / 1000
-        }`
-      );
+
+      if (error.name === "TimeoutError") {
+        logWithTimestamp(
+          `[${data.id}]: Request timeout. Will try again in ${
+            backoffTime / 1000
+          } seconds`
+        );
+      } else {
+        logWithTimestamp(
+          `[${data.id}]: Request error: ${JSON.stringify(
+            error
+          )}. Will try again in ${backoffTime / 1000} seconds.`
+        );
+      }
 
       await sleep(backoffTime);
     }
