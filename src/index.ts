@@ -1,6 +1,21 @@
 import { addTask, processQueue } from "@/process-queue";
+import { migrate } from "./database";
 
-[
+async function start() {
+  try {
+    await migrate();
+  } catch (error) {
+    console.error(error);
+  }
+
+  urls.forEach((url, index) => {
+    addTask(`${index}`, { id: `${index}`, urls: [url] }, 10);
+  });
+
+  processQueue();
+}
+
+const urls = [
   "http://localhost:8000/api/status",
   "http://localhost:8000/api/delay",
   "https://www.google.com",
@@ -103,8 +118,6 @@ import { addTask, processQueue } from "@/process-queue";
   // "https://www.simplyhired.com",
   // "https://www.ziprecruiter.com",
   // "https://www.linkedin.com",
-].forEach((url, index) => {
-  addTask(`${index}`, { id: `${index}`, urls: [url] }, 10);
-});
+];
 
-processQueue();
+start();

@@ -1,6 +1,7 @@
 import ky from "ky";
 import { leftPad, logWithTimestamp } from "@/utils";
 import { Data } from "@/process-queue";
+import { writeHistory } from "./database";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -66,6 +67,12 @@ export default async (data: Data) => {
           throw new Error(`ASSERTION_FAILED`); // throw so can be retried
         }
       }
+
+      // just write the first result for PoC
+      await writeHistory({
+        probeId: data.id,
+        ...result[0],
+      });
 
       logWithTimestamp(
         `[${paddedId}]: ${result
