@@ -1,4 +1,4 @@
-import { addTask, processQueue } from "./process-queue";
+import { addTask, processQueue } from "@/process-queue";
 
 // Initialization
 addTask("data1", { id: "data1" }, 10);

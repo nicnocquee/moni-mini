@@ -14,7 +14,10 @@ const taskMap: Map<string, Task> = new Map();
 const numCores = os.cpus().length;
 
 const piscina = new Piscina({
-  filename: `${__dirname}/worker.ts`,
+  filename:
+    process.env.NODE_ENV === "development"
+      ? `${__dirname}/worker.ts`
+      : `${__dirname}/worker.mjs`,
   maxThreads: numCores,
 });
 

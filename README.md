@@ -1,4 +1,4 @@
-# monika-mini
+# moni-mini
 
 To install dependencies:
 
