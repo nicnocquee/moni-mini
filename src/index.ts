@@ -14,7 +14,7 @@ import { addTask, processQueue } from "@/process-queue";
   "https://www.yahoo.com",
   "https://www.amazon.com",
   "https://www.sohu.com",
-  // "https://www.jd.com",
+  "https://www.jd.com",
   // "https://www.youku.com",
   // "https://www.naver.com",
   // "https://www.csdn.net",
