@@ -6,16 +6,16 @@ jobs:
         os: [windows, macos, ubuntu]
         include:
           - os: windows
-            build: npx caxa --directory . --command "{{caxa}}/node_modules/.bin/node" "{{caxa}}/dist/index.mjs" --output "moni-mini--windows--${{ github.sha }}.exe"
+            build: npx caxa -i . -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/dist/index.mjs" --output "moni-mini--windows--${{ github.sha }}.exe"
             artifact: moni-mini--windows--${{ github.sha }}.exe
           - os: macos
             build: |
-              npx caxa --directory . --command "{{caxa}}/node_modules/.bin/node" "{{caxa}}/dist/index.mjs" --output "moni-mini.app"
+              npx caxa -i . -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/dist/index.mjs" --output "moni-mini.app"
               tar -czf "moni-mini--macos--${{ github.sha }}.app.tgz" "moni-mini.app"
             artifact: moni-mini--macos--${{ github.sha }}.app.tgz
           - os: ubuntu
             build: |
-              npx caxa --directory . --command "{{caxa}}/node_modules/.bin/node" "{{caxa}}/dist/index.mjs" --output "moni-mini"
+              npx caxa -i . -- "{{caxa}}/node_modules/.bin/node" "{{caxa}}/dist/index.mjs" --output "moni-mini"
               tar -czf "moni-mini--linux--${{ github.sha }}.tgz" "moni-mini"
             artifact: moni-mini--linux--${{ github.sha }}.tgz
     runs-on: ${{ matrix.os }}-latest
