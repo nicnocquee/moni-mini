@@ -1,5 +1,6 @@
 import { addTask, processQueue } from "@/process-queue";
-import { migrate } from "./database";
+import { migrate, getDBPath } from "./database";
+import { logWithTimestamp } from "./utils";
 
 async function start() {
   try {
@@ -8,8 +9,11 @@ async function start() {
     console.error(error);
   }
 
+  const dbPath = getDBPath();
+  logWithTimestamp(`Using db: ${dbPath}`);
+
   urls.forEach((url, index) => {
-    addTask(`${index}`, { id: `${index}`, urls: [url] }, 10);
+    addTask(`${index}`, { id: `${index}`, urls: [url], dbPath }, 10);
   });
 
   processQueue();

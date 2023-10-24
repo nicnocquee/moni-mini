@@ -70,6 +70,7 @@ export default async (data: Data) => {
 
       // just write the first result for PoC
       await writeHistory({
+        dbPath: data.dbPath,
         probeId: data.id,
         ...result[0],
       });

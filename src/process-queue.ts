@@ -7,7 +7,7 @@ import { logWithTimestamp } from "./utils";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export type Data = { id: string; urls: string[] };
+export type Data = { id: string; urls: string[]; dbPath: string };
 type Task = { data: Data; interval: number; nextRun?: number };
 
 const taskMap: Map<string, Task> = new Map();

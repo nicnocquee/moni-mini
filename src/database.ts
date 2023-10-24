@@ -5,13 +5,15 @@ import { logWithTimestamp } from "./utils";
 import { fileURLToPath } from "url";
 
 const sqlite3 = SQLite3.verbose();
-const dbPath = path.resolve(process.cwd(), "monika-logs.db");
+const _dbPath = path.resolve(process.cwd(), "monika-logs.db");
+
+export const getDBPath = () => _dbPath;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 let db: Database<SQLite3.Database, SQLite3.Statement>;
-export const getSQLiteDB = async () => {
+export const getSQLiteDB = async (dbPath: string = _dbPath) => {
   if (!db) {
     db = await open({
       filename: dbPath,
@@ -42,14 +44,16 @@ export async function writeHistory({
   duration,
   size,
   status,
+  dbPath,
 }: {
   probeId: string;
   duration: number;
   size: number;
   status: number;
+  dbPath: string;
 }) {
   const sql = `INSERT INTO history (created_at, probe_id, response_status, response_time, response_size) values (?, ?, ?, ?, ?)`;
-  const _db = await getSQLiteDB();
+  const _db = await getSQLiteDB(dbPath);
   await _db.run(sql, [
     new Date().toISOString(),
     probeId,
