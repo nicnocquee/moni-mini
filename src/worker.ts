@@ -1,42 +1,77 @@
+import ky from "ky";
 import { logWithTimestamp } from "@/utils";
+import { Data } from "@/process-queue";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const randomBetween = (min: number, max: number): number => {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-};
-
-type Data = { id: string };
 const MAX_RETRIES = 3;
 
 export default async (data: Data) => {
   let retries = 0;
 
+  logWithTimestamp(`[${data.id}]: Start probing ${data.urls.join(",")}`);
+
   while (retries < MAX_RETRIES) {
     try {
-      // Your actual processing logic here
-      const rand = randomBetween(4, 12);
-      logWithTimestamp(`${data.id}: Start for ${rand} seconds`);
-      await sleep(rand * 1000);
-      logWithTimestamp(`${data.id}: Finish`);
-      return "Success";
+      const result = [];
+      for (const url of data.urls) {
+        const start = Date.now();
+        const response = await ky(url, {
+          hooks: {
+            beforeRetry: [
+              async ({ retryCount }) => {
+                logWithTimestamp(`[${data.id}]: Retry #${retryCount} ${url}`);
+              },
+            ],
+          },
+          retry: {
+            limit: 5,
+            backoffLimit: 5000, // 0.3 * (2 ** (attemptCount - 1)) * 5000
+          },
+        });
+        const end = Date.now();
+        let size = 0;
+        const contentLength = response.headers.get("Content-Length");
+        if (contentLength !== null) {
+          size = parseInt(contentLength, 10);
+        } else if (response.body) {
+          const reader = response.body.getReader();
+          while (true) {
+            const { done, value } = await reader.read();
+
+            if (done) {
+              break;
+            }
+
+            size += value.length;
+          }
+        }
+        result.push({ duration: end - start, size });
+      }
+
+      logWithTimestamp(
+        `[${data.id}]: Finish probing with result: ${result
+          .map((r) => `${r.duration}ms,${r.size}bytes`)
+          .join(`,`)}`
+      );
+
+      return result;
     } catch (error) {
-      logWithTimestamp(error as any);
       retries++;
       const backoffTime = Math.pow(2, retries) * 1000; // Exponential backoff in milliseconds
-      console.error(
-        `Error processing ${JSON.stringify(data)}, Retrying in ${
+      logWithTimestamp(
+        `[${data.id}]: Request retries failed. Will try again in ${
           backoffTime / 1000
-        }...`
+        }`
       );
 
       await sleep(backoffTime);
     }
   }
 
-  logWithTimestamp(`throwing error`);
+  logWithTimestamp(`[${data.id}]: Stop retrying.`);
 
   throw new Error(
-    `Failed to process ${JSON.stringify(data)} after ${MAX_RETRIES} retries`
+    `Failed to probe ${data.urls.join(",")} after ${MAX_RETRIES} retries`
   );
 };
