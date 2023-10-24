@@ -20,6 +20,7 @@
     "clean": true
   },
   "devDependencies": {
+    "bun-types": "^1.0.7",
     "caxa": "^3.0.1",
     "tsup": "^7.2.0",
     "tsx": "^3.14.0"
